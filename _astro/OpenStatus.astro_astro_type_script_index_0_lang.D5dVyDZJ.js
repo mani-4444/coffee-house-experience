@@ -1,0 +1,1 @@
+import{a as e,o as t,r as n}from"./hours.DM0uYrTg.js";var r=()=>{let r=n(new Date,e,t.timeZone);document.querySelectorAll(`[data-status]`).forEach(e=>{e.dataset.state=r.open?`open`:`closed`;let t=e.querySelector(`[data-status-text]`);t&&(t.textContent=r.text)})};r(),setInterval(r,6e4);

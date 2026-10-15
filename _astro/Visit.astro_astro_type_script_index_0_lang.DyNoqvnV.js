@@ -1,0 +1,1 @@
+import{i as e,o as t}from"./hours.DM0uYrTg.js";var{day:n}=e(new Date,t.timeZone),r=document.querySelector(`[data-hours] tr[data-day="${n}"]`);r&&(r.setAttribute(`aria-current`,`date`),r.querySelector(`[data-today-marker]`)?.removeAttribute(`hidden`));

@@ -1,0 +1,33 @@
+---
+import Base from '../layouts/Base.astro';
+import Intro from '../components/Intro.astro';
+import Header from '../components/Header.astro';
+import Sign from '../components/Sign.astro';
+import ByTwo from '../components/ByTwo.astro';
+import Cups from '../components/Cups.astro';
+import Board from '../components/Board.astro';
+import Rules from '../components/Rules.astro';
+import Families from '../components/Families.astro';
+import Visit from '../components/Visit.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../data/site';
+
+const title = `${site.name} — Coffee House, ${site.city}`;
+const description =
+  'South Indian filter coffee with Irani café manners. Order kaapi by two: one pour, two tumblers, ₹120. Hyderabad.';
+---
+
+<Base title={title} description={description}>
+  <Intro />
+  <Header />
+  <main id="main" tabindex="-1">
+    <Sign />
+    <ByTwo />
+    <Cups />
+    <Board />
+    <Rules />
+    <Families />
+    <Visit />
+  </main>
+  <Footer />
+</Base>

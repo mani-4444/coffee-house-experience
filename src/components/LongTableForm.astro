@@ -1,0 +1,235 @@
+---
+import { hours, site } from '../data/site';
+import { formatTime } from '../lib/hours';
+import { timeOptions } from '../lib/booking';
+
+const times = timeOptions(hours);
+const { min, max } = site.longTable;
+---
+
+<form class="booking" id="long-table" novalidate data-booking aria-labelledby="booking-title">
+  <h3 class="sign-type booking__title" id="booking-title">Book the long table</h3>
+  <p class="booking__intro">
+    Every other seat is first come, first served. The long table seats {min} to {max}: book clubs, birthdays,
+    Sunday-market hauls. Send a request and we confirm on WhatsApp, usually within the hour.
+  </p>
+
+  <div class="field">
+    <label for="bk-name">Name</label>
+    <input id="bk-name" name="name" type="text" autocomplete="name" required aria-describedby="bk-name-err" />
+    <p class="field__error" id="bk-name-err" data-error-for="name"></p>
+  </div>
+
+  <div class="booking__row">
+    <div class="field">
+      <label for="bk-date">Date</label>
+      <input id="bk-date" name="date" type="date" required aria-describedby="bk-date-err" data-date />
+      <p class="field__error" id="bk-date-err" data-error-for="date"></p>
+    </div>
+    <div class="field">
+      <label for="bk-time">Time</label>
+      <select id="bk-time" name="time" required aria-describedby="bk-time-err">
+        <option value="">Choose</option>
+        {times.map((t) => <option value={t}>{formatTime(t)}</option>)}
+      </select>
+      <p class="field__error" id="bk-time-err" data-error-for="time"></p>
+    </div>
+    <div class="field field--size">
+      <label for="bk-size">People</label>
+      <input
+        id="bk-size"
+        name="size"
+        type="number"
+        inputmode="numeric"
+        min={min}
+        max={max}
+        step="1"
+        required
+        aria-describedby="bk-size-hint bk-size-err"
+      />
+      <p class="field__hint" id="bk-size-hint">{min}–{max}</p>
+      <p class="field__error" id="bk-size-err" data-error-for="size"></p>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="bk-note">Anything we should know <span class="field__optional">(optional)</span></label>
+    <textarea id="bk-note" name="note" rows="2"></textarea>
+  </div>
+
+  <div class="booking__submit">
+    <button class="btn" type="submit">Request on WhatsApp</button>
+    <p class="booking__fine">Opens WhatsApp with your request written out. Nothing is sent until you press send.</p>
+  </div>
+  <p class="booking__status" role="status" data-booking-status></p>
+</form>
+
+<script>
+  import { hours, site } from '../data/site';
+  import { bookingMessage, isoToday, validateBooking, whatsappUrl, type BookingField } from '../lib/booking';
+
+  const form = document.querySelector<HTMLFormElement>('[data-booking]');
+  if (form) {
+    const status = form.querySelector<HTMLElement>('[data-booking-status]')!;
+    const dateInput = form.querySelector<HTMLInputElement>('[data-date]')!;
+    dateInput.min = isoToday(new Date(), site.timeZone);
+
+    const fields: BookingField[] = ['name', 'date', 'time', 'size'];
+    const control = (f: string) => form.elements.namedItem(f) as HTMLInputElement | HTMLSelectElement;
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const input = {
+        name: String(data.get('name') ?? ''),
+        date: String(data.get('date') ?? ''),
+        time: String(data.get('time') ?? ''),
+        size: String(data.get('size') ?? ''),
+        note: String(data.get('note') ?? ''),
+      };
+      const errors = validateBooking(input, {
+        hours,
+        today: isoToday(new Date(), site.timeZone),
+        min: site.longTable.min,
+        max: site.longTable.max,
+      });
+
+      for (const f of fields) {
+        const msg = errors[f] ?? '';
+        form.querySelector<HTMLElement>(`[data-error-for="${f}"]`)!.textContent = msg;
+        control(f).setAttribute('aria-invalid', String(Boolean(msg)));
+      }
+
+      const firstInvalid = fields.find((f) => errors[f]);
+      if (firstInvalid) {
+        status.textContent = '';
+        control(firstInvalid).focus();
+        return;
+      }
+
+      const url = whatsappUrl(site.whatsapp, bookingMessage(input, site.name));
+      window.open(url, '_blank', 'noopener');
+      status.innerHTML = '';
+      status.append('WhatsApp should have opened in a new tab. If it didn’t, ');
+      const link = Object.assign(document.createElement('a'), { href: url, target: '_blank', rel: 'noopener', textContent: 'open your request here' });
+      status.append(link, '.');
+    });
+  }
+</script>
+
+<style>
+  .booking {
+    display: grid;
+    gap: var(--s-5);
+  }
+  .booking__title {
+    font-size: var(--step-5);
+  }
+  .booking__intro {
+    color: var(--ink-soft);
+    max-width: 46ch;
+  }
+  .booking__row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 0.8fr;
+    gap: var(--s-4);
+  }
+  .field {
+    display: grid;
+    gap: var(--s-2);
+    align-content: start;
+  }
+  label {
+    font-family: var(--font-sign);
+    font-weight: 600;
+    font-size: var(--step--1);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .field__optional {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 48px;
+    padding: var(--s-2) var(--s-3);
+    background: var(--paper-deep);
+    border: 0;
+    border-bottom: 1.5px solid var(--ink);
+    border-radius: 0;
+    font-size: var(--step-1);
+    color: var(--ink);
+    accent-color: var(--enamel);
+    transition: border-color var(--dur-quick) var(--ease-out);
+  }
+  select {
+    appearance: none;
+    background-image: none;
+    cursor: pointer;
+  }
+  textarea {
+    resize: vertical;
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--enamel);
+    outline-offset: 2px;
+    border-bottom-color: var(--enamel);
+  }
+  [aria-invalid='true'] {
+    border-bottom-color: var(--vermilion);
+  }
+  .field__hint {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    font-family: var(--font-sign);
+    letter-spacing: 0.04em;
+  }
+  .field__error {
+    font-size: var(--step-0);
+    color: var(--vermilion);
+    line-height: 1.35;
+  }
+  .field__error:empty {
+    display: none;
+  }
+  .field__error:not(:empty)::before {
+    content: '✕ ';
+    font-family: var(--font-sign);
+  }
+  .booking__submit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-5);
+  }
+  .booking__fine {
+    font-size: var(--step-0);
+    font-style: italic;
+    color: var(--ink-soft);
+    max-width: 32ch;
+  }
+  .booking__status:empty {
+    display: none;
+  }
+  .booking__status {
+    padding: var(--s-3) var(--s-4);
+    border-left: 3px solid var(--enamel);
+    background: var(--paper-deep);
+  }
+
+  @media (max-width: 560px) {
+    .booking__row {
+      grid-template-columns: 1fr 1fr;
+    }
+    .booking__row .field:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

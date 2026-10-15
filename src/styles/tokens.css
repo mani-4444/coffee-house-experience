@@ -1,0 +1,68 @@
+/* The only file allowed to contain raw colour values (enforced by `npm run lint:tokens`). */
+:root {
+  /* Colour — see docs/design-system.md for contrast table */
+  --paper: #f3ebdd;
+  --paper-deep: #e9dcc8;
+  --ink: #1e1410;
+  --ink-soft: #5a4a3e;
+  --rule-line: #d3c2a8;
+  --enamel: #4a2c1d;
+  --enamel-deep: #36200f;
+  --cream: #f7efe2;
+  --cream-muted: #bdae9b;
+  --enamel-soft: #d9bfa0;
+  --crema: #c08a4a; /* caramel: decorative on paper, text only on ink/enamel */
+  --vermilion: #a83223;
+  --vermilion-light: #e86a50;
+  --cream-wash: rgb(247 239 226 / 0.06);
+  --cream-hair: rgb(247 239 226 / 0.25);
+  --crema-wash: rgb(192 138 74 / 0.24); /* arrival flash on a board row */
+  --sheen: rgb(247 239 226 / 0.14); /* cursor light on a drink card */
+
+  /* Type families */
+  --font-sign: 'Anek Rupee', 'Anek Latin Variable', 'Arial Narrow', sans-serif;
+  --font-telugu: 'Anek Telugu Sign', 'Noto Sans Telugu', 'Nirmala UI', sans-serif;
+  --font-voice: 'Newsreader Variable', Georgia, 'Times New Roman', serif;
+
+  /* Type scale */
+  --step-sign: clamp(3.5rem, 17vw, 13rem);
+  --step-6: clamp(3rem, 8vw, 7rem);
+  --step-5: clamp(2.4rem, 5.5vw, 4.5rem);
+  --step-4: clamp(1.5rem, 2.6vw, 2.25rem);
+  --step-3: clamp(1.3rem, 2vw, 1.7rem);
+  --step-2: 1.25rem;
+  --step-1: 1.125rem;
+  --step-0: 1rem;
+  --step--1: 0.8125rem;
+
+  /* Space */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+  --s-9: 6rem;
+  --s-10: 10rem;
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --gap: clamp(1rem, 2.5vw, 2rem);
+  --section-y: clamp(5rem, 12vw, 10rem);
+  --container: 1360px;
+  --header-h: 4rem;
+
+  /* Surfaces */
+  --radius-enamel: clamp(14px, 2vw, 28px);
+  --rim-inset: clamp(10px, 1.3vw, 18px);
+  --rim-width: 2px;
+  --hairline: 1px;
+
+  /* Motion — see docs/motion.md */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-quick: 160ms;
+  --dur-base: 320ms;
+  --dur-slow: 900ms;
+  --stagger: 70ms; /* delay step between siblings in a reveal sequence (--i) */
+}

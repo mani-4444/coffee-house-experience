@@ -1,0 +1,242 @@
+---
+import OpenStatus from './OpenStatus.astro';
+import FloorPlan from './FloorPlan.astro';
+import LongTableForm from './LongTableForm.astro';
+import { hours, site } from '../data/site';
+import { weekRows } from '../lib/hours';
+
+const rows = weekRows(hours);
+---
+
+<section class="visit" id="visit" aria-labelledby="visit-title">
+  <div class="container">
+    <div class="visit__top">
+      <div class="where reveal" data-reveal>
+        <p class="label visit__eyebrow">Visit</p>
+        <h2 class="sign-type visit__title mask-reveal" id="visit-title" data-reveal><span class="mask__line"><span class="mask__inner">Find the brown&nbsp;sign.</span></span></h2>
+        <address class="where__address">{site.address}</address>
+        <p class="where__landmark">{site.landmark}</p>
+        <div class="where__actions">
+          <a class="btn" href={site.mapsUrl} target="_blank" rel="noopener">
+            Get directions<span class="visually-hidden"> (opens Google Maps)</span>
+          </a>
+          <a class="text-link" href={site.phone.href}>Call {site.phone.display}</a>
+        </div>
+      </div>
+
+      <div class="hours reveal" data-reveal style="--reveal-delay: 100ms">
+        <table class="hours__table" data-hours>
+          <caption class="label">Hours</caption>
+          <tbody>
+            {
+              rows.map((r, k) => (
+                <tr data-day={r.day} class:list={[r.text === 'Closed' && 'is-closed']} style={`--i: ${k}`}>
+                  <th scope="row">
+                    {r.name}
+                    <span class="hours__today" data-today-marker hidden>
+                      Today
+                    </span>
+                  </th>
+                  <td>{r.text}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+        <OpenStatus />
+        <p class="hours__note">The case empties by about 7 pm. Come early for lukhmi.</p>
+      </div>
+    </div>
+
+    <div class="visit__bottom">
+      <figure class="room">
+        <div class="room__plan">
+          <FloorPlan />
+        </div>
+        <figcaption>
+          <span class="label room__fig">The room</span>
+          Twelve marble tables for two, one long table for ten, thirty-four bentwood chairs. Window seats go first.
+        </figcaption>
+      </figure>
+      <LongTableForm />
+    </div>
+  </div>
+</section>
+
+<script>
+  import { site } from '../data/site';
+  import { zonedParts } from '../lib/hours';
+
+  const { day } = zonedParts(new Date(), site.timeZone);
+  const row = document.querySelector<HTMLElement>(`[data-hours] tr[data-day="${day}"]`);
+  if (row) {
+    row.setAttribute('aria-current', 'date');
+    row.querySelector<HTMLElement>('[data-today-marker]')?.removeAttribute('hidden');
+  }
+</script>
+
+<style>
+  .visit {
+    padding-block: var(--section-y);
+  }
+  .visit__top {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--s-7) var(--gap);
+    align-items: start;
+  }
+  .where {
+    grid-column: 1 / span 7;
+  }
+  .visit__eyebrow {
+    color: var(--vermilion);
+    margin-bottom: var(--s-4);
+  }
+  .visit__title {
+    font-size: var(--step-6);
+    color: var(--enamel);
+  }
+  .where__address {
+    margin-top: var(--s-6);
+    font-style: normal;
+    font-size: var(--step-4);
+    line-height: 1.25;
+  }
+  .where__landmark {
+    margin-top: var(--s-3);
+    color: var(--ink-soft);
+    max-width: 44ch;
+  }
+  .where__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-6);
+    margin-top: var(--s-6);
+  }
+
+  .hours {
+    grid-column: 9 / -1;
+    display: grid;
+    gap: var(--s-5);
+    padding-top: var(--s-2);
+  }
+  .hours__table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .hours__table caption {
+    text-align: left;
+    padding-bottom: var(--s-3);
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .hours__table th,
+  .hours__table td {
+    padding: var(--s-3) 0;
+    border-bottom: var(--hairline) solid var(--rule-line);
+    text-align: left;
+    font-weight: 400;
+  }
+  .hours__table td {
+    text-align: right;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .hours__table th {
+    font-family: var(--font-sign);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .is-closed {
+    color: var(--ink-soft);
+  }
+  [aria-current='date'] th,
+  [aria-current='date'] td {
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .hours__today {
+    margin-left: var(--s-2);
+    padding: 0.1em 0.45em;
+    background: var(--vermilion);
+    color: var(--cream);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    vertical-align: 0.15em;
+  }
+  .hours__note {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: var(--step-0);
+  }
+
+  .visit__bottom {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--s-8) var(--gap);
+    margin-top: clamp(var(--s-8), 8vw, var(--s-10));
+    align-items: start;
+  }
+  .room {
+    grid-column: 1 / span 6;
+    display: grid;
+    gap: var(--s-4);
+    border-top: 1.5px solid var(--ink);
+    padding-top: var(--s-5);
+  }
+  .room figcaption {
+    color: var(--ink-soft);
+    max-width: 50ch;
+  }
+  .room__fig {
+    display: block;
+    color: var(--vermilion);
+    margin-bottom: var(--s-1);
+  }
+  .visit__bottom :global(.booking) {
+    grid-column: 8 / -1;
+    border-top: 1.5px solid var(--ink);
+    padding-top: var(--s-5);
+  }
+
+  @media (max-width: 1100px) {
+    .where,
+    .hours,
+    .room {
+      grid-column: 1 / -1;
+    }
+    .hours {
+      max-width: 32rem;
+    }
+    .visit__bottom :global(.booking) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Hours cascade in; today's row gets one crema sweep. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hours__table tr {
+      transition: opacity 500ms var(--ease-out) calc(var(--i, 0) * 60ms + 250ms);
+    }
+    :global(.js) .hours.reveal:not(.is-in) .hours__table tr {
+      opacity: 0;
+    }
+    :global(.is-in) [aria-current='date'] :is(th, td) {
+      background-image: linear-gradient(var(--crema-wash), var(--crema-wash));
+      background-repeat: no-repeat;
+      animation: today-sweep 1400ms var(--ease-out) 900ms both;
+    }
+  }
+  @keyframes today-sweep {
+    0% {
+      background-size: 0 100%;
+    }
+    60% {
+      background-size: 100% 100%;
+    }
+    100% {
+      background-size: 100% 100%;
+      background-image: none;
+    }
+  }
+</style>

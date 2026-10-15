@@ -1,0 +1,170 @@
+---
+import { rules } from '../data/rules';
+import { site } from '../data/site';
+---
+
+<section class="rules" id="rules" aria-labelledby="rules-title">
+  <div class="container">
+    <div class="board-plate reveal" data-reveal="scale">
+      <span class="hole hole--tl" aria-hidden="true"></span>
+      <span class="hole hole--tr" aria-hidden="true"></span>
+      <span class="hole hole--bl" aria-hidden="true"></span>
+      <span class="hole hole--br" aria-hidden="true"></span>
+      <div class="board-plate__face">
+        <header class="rules__head">
+          <h2 class="sign-type rules__title mask-reveal" id="rules-title" data-reveal><span class="mask__line"><span class="mask__inner">House rules</span></span></h2>
+          <p class="rules__sub">
+            <span class="label">Est. {site.established}</span>
+            <span class="rules__aside">Some inherited, some new. All enforced, gently.</span>
+          </p>
+        </header>
+        <ol class="rules__list" role="list" data-rules>
+          {
+            rules.map((rule, i) => (
+              <li class="rule reveal" data-reveal style={`--i: ${Math.floor(i / 2)}`}>
+                <span class="rule__num" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <p class="rule__text">{rule}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .rules {
+    padding-block: var(--section-y);
+  }
+  .board-plate {
+    --hole: clamp(6px, 0.6vw, 9px);
+    position: relative;
+    max-width: 72rem;
+    margin-inline: auto;
+    padding: var(--rim-inset);
+    background: var(--enamel);
+    color: var(--cream);
+    border-radius: var(--radius-enamel);
+  }
+  .hole {
+    position: absolute;
+    width: var(--hole);
+    height: var(--hole);
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid var(--enamel-deep);
+  }
+  .hole--tl,
+  .hole--bl {
+    left: calc(var(--rim-inset) * 1.6);
+  }
+  .hole--tr,
+  .hole--br {
+    right: calc(var(--rim-inset) * 1.6);
+  }
+  .hole--tl,
+  .hole--tr {
+    top: calc(var(--rim-inset) / 2 - var(--hole) / 2);
+  }
+  .hole--bl,
+  .hole--br {
+    bottom: calc(var(--rim-inset) / 2 - var(--hole) / 2);
+  }
+  .board-plate__face {
+    border: var(--rim-width) solid var(--cream);
+    border-radius: calc(var(--radius-enamel) - var(--rim-inset) / 2);
+    padding: clamp(var(--s-5), 5vw, var(--s-8));
+  }
+
+  .rules__head {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: var(--s-3);
+    padding-bottom: clamp(var(--s-5), 4vw, var(--s-7));
+    border-bottom: var(--rim-width) solid var(--cream);
+  }
+  .rules__title {
+    font-size: var(--step-6);
+    letter-spacing: 0.02em;
+  }
+  .rules__sub {
+    display: grid;
+    gap: var(--s-1);
+    justify-items: center;
+  }
+  .rules__aside {
+    font-style: italic;
+    color: var(--enamel-soft);
+  }
+
+  .rules__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(var(--s-6), 5vw, var(--s-8));
+    padding: 0;
+    list-style: none;
+  }
+  .rule {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr;
+    gap: var(--s-4);
+    align-items: baseline;
+    padding-block: clamp(var(--s-4), 2.4vw, var(--s-6));
+    border-bottom: var(--hairline) solid var(--cream-hair);
+  }
+  .rule:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+  .rule__num {
+    font-family: var(--font-sign);
+    font-stretch: 75%;
+    font-weight: 750;
+    font-size: 2.25rem;
+    line-height: 1;
+    color: var(--vermilion-light);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .rule__text {
+    font-size: var(--step-3);
+    line-height: 1.3;
+  }
+
+  @media (max-width: 860px) {
+    .rules__list {
+      grid-template-columns: 1fr;
+    }
+    .rule:nth-last-child(2) {
+      border-bottom: var(--hairline) solid var(--cream-hair);
+    }
+  }
+  @media (max-width: 560px) {
+    .rule {
+      grid-template-columns: 2.4rem 1fr;
+      gap: var(--s-3);
+    }
+    .rule__num {
+      font-size: 1.75rem;
+    }
+    .rule__text {
+      font-size: 1.1875rem;
+    }
+  }
+
+  /* Numerals slide up into place just after their rule appears. */
+  @media (prefers-reduced-motion: no-preference) {
+    .rule__num {
+      display: inline-block;
+      transition:
+        transform 700ms var(--ease-out) calc(var(--i, 0) * var(--stagger) + 200ms),
+        opacity 500ms var(--ease-out) calc(var(--i, 0) * var(--stagger) + 200ms);
+    }
+    :global(.js) .rule.reveal:not(.is-in) .rule__num {
+      transform: translateY(70%);
+      opacity: 0;
+    }
+  }
+</style>

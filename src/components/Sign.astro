@@ -1,0 +1,272 @@
+---
+import HalfMark from './HalfMark.astro';
+import OpenStatus from './OpenStatus.astro';
+import { site } from '../data/site';
+---
+
+<section class="arrival" id="top" aria-labelledby="sign-name">
+  <div class="container">
+    <div class="sign">
+      <span class="sign__hole sign__hole--tl" aria-hidden="true"></span>
+      <span class="sign__hole sign__hole--tr" aria-hidden="true"></span>
+      <span class="sign__hole sign__hole--bl" aria-hidden="true"></span>
+      <span class="sign__hole sign__hole--br" aria-hidden="true"></span>
+
+      <div class="sign__face">
+        <p class="sign__band sign__band--top">
+          <span>{site.descriptor}</span>
+          <span class="sign__telugu"><span lang="te">కాఫీ</span> · <span lang="te">చాయ్</span></span>
+          <span>Est. {site.established}</span>
+        </p>
+
+        <h1 class="sign__name" id="sign-name">
+          <span class="sign__word sign__word--one">One</span>{' '}
+          <span class="sign__word sign__word--by">by</span>{' '}
+          <span class="sign__word sign__word--two">Two</span>
+          <span class="sign__mark"><HalfMark size="100%" /></span>
+          <span class="visually-hidden">, coffee house in {site.city}</span>
+        </h1>
+
+        <p class="sign__band sign__band--bottom">
+          <span class="sign__street">Kaapi · Chai · Bakes</span>
+          <span>{site.city}</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="arrival__below">
+      <p class="arrival__premise reveal" data-reveal>
+        One filter coffee, poured into two steel tumblers and shared across a marble table.
+        Order it <em>by&nbsp;two</em>.
+      </p>
+      <div class="arrival__act reveal" data-reveal style="--reveal-delay: 80ms">
+        <OpenStatus />
+        <div class="arrival__ctas">
+          <a class="btn" href={site.mapsUrl} target="_blank" rel="noopener">
+            Get directions<span class="visually-hidden"> (opens Google Maps)</span>
+          </a>
+          <a class="text-link" href="#board">See the board</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .arrival {
+    padding-top: var(--s-4);
+    padding-bottom: var(--section-y);
+  }
+
+  /* The sign settles once, as the opening's shutter lifts onto it (D10). Never again, never looped. */
+  :global(html[data-arrived]) .sign {
+    animation: sign-settle 700ms var(--ease-out) 250ms both;
+  }
+  @keyframes sign-settle {
+    from {
+      opacity: 0;
+      transform: translateY(-18px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sign {
+      animation: none !important;
+    }
+  }
+
+  /* ---------- The enamel sign ---------- */
+  .sign {
+    --hole: clamp(6px, 0.6vw, 9px);
+    position: relative;
+    background: var(--enamel);
+    color: var(--cream);
+    border-radius: var(--radius-enamel);
+    padding: var(--rim-inset);
+  }
+  /* Mounting holes sit in the margin outside the rim, as on the rules board. */
+  .sign__hole {
+    position: absolute;
+    width: var(--hole);
+    height: var(--hole);
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid var(--enamel-deep);
+  }
+  .sign__hole--tl,
+  .sign__hole--bl {
+    left: calc(var(--rim-inset) * 1.6);
+  }
+  .sign__hole--tr,
+  .sign__hole--br {
+    right: calc(var(--rim-inset) * 1.6);
+  }
+  .sign__hole--tl,
+  .sign__hole--tr {
+    top: calc(var(--rim-inset) / 2 - var(--hole) / 2);
+  }
+  .sign__hole--bl,
+  .sign__hole--br {
+    bottom: calc(var(--rim-inset) / 2 - var(--hole) / 2);
+  }
+  .sign__face {
+    border: var(--rim-width) solid var(--cream);
+    border-radius: calc(var(--radius-enamel) - var(--rim-inset) / 2);
+    overflow: hidden;
+  }
+
+  .sign__band {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-4);
+    padding: var(--s-3) clamp(var(--s-4), 2.5vw, var(--s-6));
+    font-family: var(--font-sign);
+    font-stretch: 75%;
+    font-weight: 700;
+    font-size: clamp(0.95rem, 1.6vw, 1.45rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1.1;
+  }
+  .sign__band--top {
+    border-bottom: var(--rim-width) solid var(--cream);
+  }
+  .sign__band--bottom {
+    border-top: var(--rim-width) solid var(--cream);
+  }
+  .sign__telugu {
+    letter-spacing: 0.02em;
+  }
+  .sign__telugu [lang='te'] {
+    font-family: var(--font-telugu);
+    font-weight: 600;
+    text-transform: none;
+    font-size: 1.05em;
+  }
+
+  .sign__name {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0 0.22em;
+    padding: clamp(var(--s-5), 4vw, var(--s-8)) clamp(var(--s-4), 3vw, var(--s-7));
+    font-family: var(--font-sign);
+    font-stretch: 75%;
+    font-weight: 780;
+    font-size: var(--step-sign);
+    line-height: 0.82;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+  .sign__word {
+    /* Optical: caps sit on the baseline, nudge to centre with the roundel */
+    padding-top: 0.07em;
+  }
+  .sign__word--by {
+    font-size: 0.5em;
+    letter-spacing: 0.06em;
+    align-self: center;
+    padding-top: 0.12em;
+  }
+  .sign__mark {
+    display: block;
+    width: 0.8em;
+    height: 0.8em;
+    margin-left: 0.06em;
+  }
+
+  /* ---------- Below the sign ---------- */
+  .arrival__below {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--s-6) var(--gap);
+    align-items: end;
+    margin-top: clamp(var(--s-6), 4vw, var(--s-8));
+  }
+  .arrival__premise {
+    grid-column: 1 / span 7;
+    font-size: var(--step-4);
+    line-height: 1.25;
+    max-width: 30ch;
+  }
+  .arrival__premise em {
+    color: var(--enamel);
+  }
+  .arrival__act {
+    grid-column: 9 / -1;
+    display: grid;
+    gap: var(--s-5);
+    justify-items: start;
+  }
+  .arrival__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-6);
+  }
+
+  @media (max-width: 1100px) {
+    .arrival__premise {
+      grid-column: 1 / span 12;
+    }
+    .arrival__act {
+      grid-column: 1 / span 12;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .arrival {
+      padding-top: var(--s-3);
+    }
+    .sign__band {
+      font-size: 0.875rem;
+      letter-spacing: 0.1em;
+      padding-block: var(--s-2);
+    }
+    .sign__band--top > :last-child,
+    .sign__street {
+      display: none;
+    }
+    .sign__band--bottom {
+      justify-content: center;
+    }
+    .sign__name {
+      display: grid;
+      grid-template-columns: auto auto;
+      grid-template-areas:
+        'one one'
+        'by  mark'
+        'two two';
+      justify-content: center;
+      align-items: center;
+      gap: 0.06em 0.18em;
+      font-size: min(31vw, 9rem);
+      padding-block: var(--s-5) var(--s-4);
+      text-align: center;
+    }
+    .sign__word--one {
+      grid-area: one;
+    }
+    .sign__word--by {
+      grid-area: by;
+      font-size: 0.42em;
+      justify-self: end;
+    }
+    .sign__word--two {
+      grid-area: two;
+    }
+    .sign__mark {
+      grid-area: mark;
+      width: 0.62em;
+      height: 0.62em;
+      margin: 0;
+    }
+    .arrival__below {
+      margin-top: var(--s-5);
+      gap: var(--s-5);
+    }
+    .arrival__premise {
+      font-size: 1.375rem;
+    }
+  }
+</style>

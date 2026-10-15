@@ -1,0 +1,67 @@
+---
+import { hours } from '../data/site';
+import { summariseHours } from '../lib/hours';
+
+interface Props {
+  tone?: 'paper' | 'enamel';
+}
+const { tone = 'paper' } = Astro.props;
+// Static fallback (no JS): the weekly summary. The script swaps in the live IST status.
+const summary = summariseHours(hours);
+---
+
+<p class:list={['status', `status--${tone}`]} data-status data-state="static">
+  <span class="status__dot" aria-hidden="true"></span>
+  <span data-status-text>{summary}</span>
+</p>
+
+<script>
+  import { hours, site } from '../data/site';
+  import { getStatus } from '../lib/hours';
+
+  const update = () => {
+    const status = getStatus(new Date(), hours, site.timeZone);
+    document.querySelectorAll<HTMLElement>('[data-status]').forEach((el) => {
+      el.dataset.state = status.open ? 'open' : 'closed';
+      const text = el.querySelector('[data-status-text]');
+      if (text) text.textContent = status.text;
+    });
+  };
+  update();
+  setInterval(update, 60_000);
+</script>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    font-family: var(--font-sign);
+    font-stretch: 100%;
+    font-weight: 600;
+    font-size: var(--step-0);
+    letter-spacing: 0.02em;
+    font-variant-numeric: lining-nums;
+  }
+  .status__dot {
+    flex: none;
+    width: 0.62em;
+    height: 0.62em;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    transform: translateY(-0.02em);
+  }
+  .status[data-state='static'] .status__dot {
+    display: none;
+  }
+  .status--paper[data-state='open'] .status__dot {
+    background: var(--enamel);
+    border-color: var(--enamel);
+  }
+  .status--paper[data-state='closed'] {
+    color: var(--ink-soft);
+  }
+  .status--enamel[data-state='open'] .status__dot {
+    background: var(--cream);
+  }
+</style>

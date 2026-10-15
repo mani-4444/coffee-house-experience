@@ -1,0 +1,117 @@
+---
+// The room in plan view. Static by design (docs/motion.md): a floor plan does not animate.
+// Marble tables seat two; the long table (brand brown) is the only bookable seat.
+const marble = [
+  { x: 95, y: 238 },
+  { x: 155, y: 238 },
+  { x: 305, y: 238 },
+  { x: 365, y: 238 },
+  { x: 425, y: 238 },
+  { x: 108, y: 88 },
+  { x: 108, y: 146 },
+  { x: 425, y: 96 },
+  { x: 425, y: 152 },
+  { x: 238, y: 58 },
+  { x: 150, y: 192 },
+  { x: 365, y: 192 },
+];
+const longChairs = [205, 240, 275, 310, 345];
+const filters = [82, 110, 138, 166, 194];
+---
+
+<svg class="drawing plan" viewBox="0 0 480 330" role="img" aria-labelledby="plan-t" data-reveal>
+  <title id="plan-t">
+    Floor plan of the café: twelve marble tables for two, a drip bar along the left wall, the counter at the back, and
+    one long table for six to ten in the middle of the room. The door opens onto the street.
+  </title>
+
+  <!-- walls -->
+  <g class="ln plan__walls">
+    <path pathLength="1" d="M200 280 H20 V20 H460 V280 H250" />
+  </g>
+  <!-- shopfront glazing + door swing -->
+  <g class="ln">
+    <path pathLength="1" d="M24 276 H196 M254 276 H456" />
+    <path pathLength="1" d="M250 280 A50 50 0 0 0 200 230" />
+    <path pathLength="1" d="M250 280 V230" />
+  </g>
+
+  <!-- drip bar + counter -->
+  <g class="ln">
+    <rect pathLength="1" x="20" y="62" width="34" height="152" />
+    {filters.map((y) => <circle pathLength="1" cx="37" cy={y} r="7" />)}
+    <rect pathLength="1" x="300" y="20" width="160" height="34" />
+  </g>
+
+  <!-- marble tables for two -->
+  <g class="ln">
+    {
+      marble.map((t) => (
+        <g>
+          <circle pathLength="1" cx={t.x} cy={t.y} r="11" />
+          <circle pathLength="1" cx={t.x - 19} cy={t.y} r="4.5" />
+          <circle pathLength="1" cx={t.x + 19} cy={t.y} r="4.5" />
+        </g>
+      ))
+    }
+  </g>
+
+  <!-- the long table -->
+  <g class="plan__long">
+    <rect pathLength="1" x="190" y="112" width="170" height="30" />
+    {longChairs.map((x) => <circle pathLength="1" cx={x} cy="101" r="4.5" />)}
+    {longChairs.map((x) => <circle pathLength="1" cx={x} cy="153" r="4.5" />)}
+  </g>
+
+  <g class="anno" aria-hidden="true">
+    <text class="plan__long-label" x="275" y="131" text-anchor="middle">The long table</text>
+    <text x="380" y="41" text-anchor="middle">Counter &amp; case</text>
+    <text transform="translate(68 138) rotate(-90)" text-anchor="middle">Drip bar</text>
+    <text x="225" y="300" text-anchor="middle">Door</text>
+    <text x="240" y="322" text-anchor="middle" class="plan__lane">The street</text>
+  </g>
+</svg>
+
+<style>
+  .plan {
+    width: 100%;
+    height: auto;
+  }
+  .plan__walls {
+    stroke-width: 3;
+  }
+  .plan__walls :global(path) {
+    stroke-width: 3;
+  }
+  .plan__long :global(*) {
+    fill: none;
+    stroke: var(--enamel);
+    stroke-width: 2;
+  }
+  .plan__long rect {
+    fill: var(--enamel);
+  }
+  .plan__long-label {
+    fill: var(--cream) !important;
+  }
+  @media (max-width: 560px) {
+    .plan :global(text) {
+      font-size: 13px;
+    }
+  }
+  .plan__lane {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    fill: var(--ink) !important;
+  }
+
+  /* The long table arrives last, after the room has drawn itself. */
+  @media (prefers-reduced-motion: no-preference) {
+    .plan__long {
+      transition: opacity 600ms var(--ease-out) 1000ms;
+    }
+    :global(.js) .plan[data-reveal]:not(.is-in) .plan__long {
+      opacity: 0;
+    }
+  }
+</style>

@@ -1,0 +1,302 @@
+---
+// The opening (D11): a coded animation in the brand's line language, filling the window below the
+// header, then lifting like a café shutter onto the site. No controls (client brief).
+import IntroAnimation from './IntroAnimation.astro';
+
+const captions = [
+  { text: 'The decoction drips.', d: 350, out: 2100 },
+  { text: 'Poured from a height.', d: 2450, out: 3950 },
+  { text: 'Shared, by two.', d: 4250, out: null },
+];
+---
+
+<div class="intro" data-intro-layer aria-hidden="true">
+  <script is:inline>
+    // Before first paint: cover the page if the opening will run, so the site never flashes first.
+    // It runs on every load (D13). Mirrors initialIntroState() (src/lib/intro.ts); 'obt:intro-off' is
+    // set only by automated tests and the screenshot script.
+    (function () {
+      const root = document.documentElement;
+      try {
+        if (sessionStorage.getItem('obt:intro-off')) return;
+      } catch {
+        /* storage blocked */
+      }
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      root.dataset.intro = 'pending';
+      // Failsafe: if the module script never runs, never leave the page covered.
+      setTimeout(function () {
+        if (root.dataset.intro === 'pending') delete root.dataset.intro;
+      }, 4000);
+    })();
+  </script>
+
+  <div class="intro__stage">
+    <IntroAnimation />
+    <p class="intro__captions">
+      {
+        captions.map((c) => (
+          <span class="intro__caption" style={`--d: ${c.d}ms; --out: ${c.out ?? 0}ms`} data-stays={String(c.out === null)}>
+            {c.text}
+          </span>
+        ))
+      }
+    </p>
+  </div>
+</div>
+
+<script>
+  import { ANIMATION_MS, INTRO_OFF_KEY, LIFT_MS, initialIntroState } from '../lib/intro';
+
+  const root = document.documentElement;
+  const layer = document.querySelector<HTMLElement>('[data-intro-layer]');
+  let timer = 0;
+
+  const finish = () => {
+    window.clearTimeout(timer);
+    delete root.dataset.intro;
+  };
+  const lift = () => {
+    if (!root.dataset.intro || root.dataset.intro === 'lifting') return;
+    window.clearTimeout(timer);
+    root.dataset.intro = 'lifting';
+    root.dataset.arrived = 'true';
+    timer = window.setTimeout(finish, LIFT_MS);
+  };
+
+  if (layer) {
+    let optedOut = false;
+    try {
+      optedOut = Boolean(sessionStorage.getItem(INTRO_OFF_KEY));
+    } catch {
+      /* storage blocked: play as normal */
+    }
+    const start = initialIntroState({
+      optedOut,
+      reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    });
+    if (start === 'done') finish();
+    else {
+      root.dataset.intro = 'animating';
+      timer = window.setTimeout(lift, ANIMATION_MS);
+    }
+
+    // No visible controls (client brief). The header stays usable: any click in it ends the opening at
+    // once so the action lands on the real page. Keyboard users are never held behind the panel.
+    document.querySelector('[data-header]')?.addEventListener('click', () => root.dataset.intro && finish(), {
+      capture: true,
+    });
+    document.addEventListener('keydown', (e) => {
+      if (root.dataset.intro && ['Escape', 'Tab', 'Enter', ' '].includes(e.key)) lift();
+    });
+  }
+</script>
+
+<style>
+  .intro {
+    display: none;
+  }
+  /* Shown only when the inline script opted in: no JS and reduced motion never see it. */
+  :global(html[data-intro]) {
+    overflow: hidden;
+  }
+  /* Fills the window below the header; the header (½ wordmark, nav, Directions) stays on top. */
+  :global(html[data-intro]) .intro {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    inset: calc(var(--header-h) + var(--hairline)) 0 0 0;
+    z-index: 1000;
+    overflow: hidden;
+    background: var(--ink);
+    color: var(--cream);
+  }
+  :global(html[data-intro] .site-header) {
+    z-index: 1001;
+  }
+  :global(html[data-intro='lifting']) .intro {
+    transform: translateY(-100%);
+    transition: transform 900ms var(--ease-in-out);
+  }
+
+  .intro__stage {
+    display: grid;
+    justify-items: center;
+    gap: clamp(var(--s-3), 2vh, var(--s-5));
+    width: min(100% - 2 * var(--gutter), 56rem);
+  }
+  .intro :global(.anim) {
+    width: min(100%, 72vh);
+    height: auto;
+    overflow: visible;
+  }
+  .intro__captions {
+    display: grid;
+    place-items: center;
+    min-height: 1.4em;
+    font-family: var(--font-sign);
+    font-stretch: 75%;
+    font-weight: 700;
+    font-size: clamp(1.25rem, 3.2vh, 2rem);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .intro__caption {
+    grid-area: 1 / 1;
+    opacity: 0;
+  }
+
+  /* ---------- the drawing ---------- */
+  .intro :global(.anim .ln *),
+  .intro :global(.anim .ln-solo) {
+    fill: none;
+    stroke: var(--cream);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .intro :global(.anim .hid) {
+    fill: none;
+    stroke: var(--cream);
+    stroke-width: 1;
+    stroke-dasharray: 3 2.5;
+  }
+  .intro :global(.anim .liquid) {
+    fill: var(--crema);
+  }
+  .intro :global(.anim .stream) {
+    fill: none;
+    stroke: var(--crema);
+    stroke-width: 3.2;
+    stroke-linecap: round;
+  }
+  .intro :global(.anim .stream--split) {
+    stroke-width: 2.4;
+  }
+  .intro :global(.anim .num) {
+    fill: var(--cream);
+    font-family: var(--font-sign);
+    font-stretch: 75%;
+    font-weight: 750;
+    font-size: 17px;
+  }
+
+  /* Before the timeline starts, everything is undrawn. */
+  .intro :global(:is(.ln *, .ln-solo, .stream)) {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  .intro :global(:is(.fill, .drop, .fade)) {
+    opacity: 0;
+  }
+
+  /* ---------- the timeline (each element's --d is ms from the start) ---------- */
+  :global(html[data-intro='animating']) .intro :global(.ln *),
+  :global(html[data-intro='lifting']) .intro :global(.ln *) {
+    animation: draw 800ms var(--ease-in-out) var(--d, 0ms) both;
+  }
+  :global(html[data-intro='animating']) .intro :global(:is(.ln-solo, .stream)),
+  :global(html[data-intro='lifting']) .intro :global(:is(.ln-solo, .stream)) {
+    animation: draw 550ms var(--ease-in-out) var(--d, 0ms) both;
+  }
+  :global(html[data-intro='animating']) .intro :global(.fill),
+  :global(html[data-intro='lifting']) .intro :global(.fill) {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: fill-up var(--dur, 800ms) var(--ease-out) var(--d, 0ms) both;
+  }
+  :global(html[data-intro='animating']) .intro :global(.drop),
+  :global(html[data-intro='lifting']) .intro :global(.drop) {
+    animation: drop 520ms cubic-bezier(0.55, 0, 1, 0.45) var(--d, 0ms) both;
+  }
+  :global(html[data-intro='animating']) .intro :global(.fade),
+  :global(html[data-intro='lifting']) .intro :global(.fade) {
+    animation: appear 400ms var(--ease-out) var(--d, 0ms) both;
+  }
+  /* Act 1 makes way for act 2. */
+  :global(html[data-intro='animating']) .intro :global(.act--1),
+  :global(html[data-intro='lifting']) .intro :global(.act--1) {
+    animation: act-out 450ms var(--ease-in-out) 2050ms both;
+  }
+  /* Captions: in at --d, out at --out (the last one stays). */
+  :global(html[data-intro='animating']) .intro__caption,
+  :global(html[data-intro='lifting']) .intro__caption {
+    animation:
+      caption-in 450ms var(--ease-out) var(--d) both,
+      caption-out 350ms var(--ease-in-out) var(--out) forwards;
+  }
+  :global(html[data-intro='animating']) .intro__caption[data-stays='true'],
+  :global(html[data-intro='lifting']) .intro__caption[data-stays='true'] {
+    animation: caption-in 450ms var(--ease-out) var(--d) both;
+  }
+
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+      opacity: 0;
+    }
+    2% {
+      opacity: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+      opacity: 1;
+    }
+  }
+  @keyframes fill-up {
+    from {
+      opacity: 1;
+      transform: scaleY(0);
+    }
+    to {
+      opacity: 1;
+      transform: scaleY(1);
+    }
+  }
+  @keyframes drop {
+    0% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+  }
+  @keyframes appear {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes act-out {
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes caption-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes caption-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+</style>

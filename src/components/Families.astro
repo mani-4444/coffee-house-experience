@@ -1,0 +1,262 @@
+---
+const sides = [
+  {
+    side: 'The chai side',
+    name: 'Shirin Darashah',
+    meta: 'Third generation · Hyderabad',
+    body: 'Her great-grandfather came to Hyderabad from Persia in 1936 and opened a tea room in the old city. Shirin brought what the family kept: the marble tops, the bentwood chairs, the rules on the wall, and the Osmania biscuit recipe, unchanged.',
+  },
+  {
+    side: 'The coffee side',
+    name: 'Kiran Malnad',
+    meta: 'Fourth generation · Mallige Hills',
+    body: 'His family has grown arabica on the Mallige Hills estate for four generations, on slopes where the morning mist sits in the shade trees until noon. Kiran roasts for the café every Thursday and drives the beans in himself.',
+  },
+];
+
+const blend = [
+  { share: 70, origin: 'Mallige Hills', detail: 'The Malnad family estate · washed arabica' },
+  { share: 30, origin: 'Neeli Valley', detail: 'Hill-farmer cooperatives · natural arabica' },
+];
+---
+
+<section class="families" id="families" aria-labelledby="families-title">
+  <div class="container">
+    <header class="families__head">
+      <div>
+        <p class="label families__eyebrow reveal" data-reveal>Behind the counter</p>
+        <h2 class="sign-type families__title mask-reveal" id="families-title" data-reveal><span class="mask__line"><span class="mask__inner">Two trades, one&nbsp;counter.</span></span></h2>
+      </div>
+      <p class="lede families__lede reveal" data-reveal style="--reveal-delay: 80ms">
+        One family made chai for three generations. The other grew coffee for four. In 2025 they took a shopfront
+        in Hyderabad and split it down the middle, like everything else here.
+      </p>
+    </header>
+
+    <div class="split" data-reveal>
+      {
+        sides.map((s, i) => (
+          <article class:list={['side', `side--${i === 0 ? 'chai' : 'coffee'}`, 'reveal']} data-reveal={i === 0 ? 'left' : 'right'} style={`--reveal-delay: ${i * 120}ms`}>
+            <p class="label side__label">{s.side}</p>
+            <h3 class="sign-type side__name">{s.name}</h3>
+            <p class="side__meta">{s.meta}</p>
+            <p class="side__body">{s.body}</p>
+          </article>
+        ))
+      }
+      <svg class="split__slash" viewBox="0 0 100 400" preserveAspectRatio="none" aria-hidden="true">
+        <line x1="80" y1="0" x2="20" y2="400" vector-effect="non-scaling-stroke"></line>
+      </svg>
+    </div>
+
+    <figure class="blend reveal" data-reveal>
+      <figcaption class="blend__caption">
+        <span class="label">The house decoction</span>
+        <span class="blend__note">Two coffees, roasted separately, blended by weight.</span>
+      </figcaption>
+      <div class="blend__bar" aria-hidden="true">
+        {blend.map((b, i) => <span class:list={['blend__seg', `blend__seg--${i}`]} style={`flex-basis:${b.share}%`} />)}
+      </div>
+      <dl class="blend__key">
+        {
+          blend.map((b) => (
+            <div class="blend__item" style={`flex-basis:${b.share}%`}>
+              <dt>
+                <span class="blend__share">{b.share}%</span> {b.origin}
+              </dt>
+              <dd>{b.detail}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .families {
+    background: var(--paper-deep);
+    padding-block: var(--section-y);
+  }
+  .families__head {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--s-5) var(--gap);
+    align-items: end;
+  }
+  .families__head > :first-child {
+    grid-column: 1 / span 6;
+  }
+  .families__lede {
+    grid-column: 8 / -1;
+    max-width: 34ch;
+  }
+  .families__eyebrow {
+    color: var(--vermilion);
+    margin-bottom: var(--s-4);
+  }
+  .families__title {
+    font-size: var(--step-6);
+    max-width: 12ch;
+  }
+
+  .split {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(5rem, 12vw, 11rem) minmax(0, 1fr);
+    margin-top: clamp(var(--s-7), 6vw, var(--s-9));
+  }
+  .side--chai {
+    grid-column: 1;
+  }
+  .side--coffee {
+    grid-column: 3;
+    padding-top: clamp(var(--s-6), 8vw, var(--s-10));
+  }
+  .split__slash {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: clamp(5rem, 12vw, 11rem);
+    height: 100%;
+    translate: -50% 0;
+    overflow: visible;
+  }
+  .split__slash line {
+    stroke: var(--ink);
+    stroke-width: 4;
+  }
+  .side__label {
+    color: var(--vermilion);
+  }
+  .side__name {
+    font-size: var(--step-5);
+    margin-top: var(--s-3);
+  }
+  .side__meta {
+    font-family: var(--font-sign);
+    font-weight: 600;
+    font-size: var(--step-0);
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    margin-top: var(--s-2);
+  }
+  .side__body {
+    margin-top: var(--s-5);
+    max-width: 44ch;
+  }
+
+  .blend {
+    margin-top: clamp(var(--s-8), 8vw, var(--s-10));
+    border-top: 1.5px solid var(--ink);
+    padding-top: var(--s-4);
+  }
+  .blend__caption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-2) var(--s-5);
+    color: var(--ink-soft);
+  }
+  .blend__caption .label {
+    color: var(--ink);
+  }
+  .blend__note {
+    font-style: italic;
+  }
+  .blend__bar {
+    display: flex;
+    height: clamp(1.75rem, 3vw, 2.75rem);
+    margin-top: var(--s-5);
+    border: 1.5px solid var(--ink);
+  }
+  .blend__seg--0 {
+    background: var(--enamel);
+    border-right: 1.5px solid var(--ink);
+  }
+  .blend__seg--1 {
+    background: var(--paper);
+  }
+  .blend__key {
+    display: flex;
+    margin-top: var(--s-3);
+  }
+  .blend__item {
+    padding-right: var(--s-4);
+  }
+  .blend__item dt {
+    font-family: var(--font-sign);
+    font-stretch: 75%;
+    font-weight: 750;
+    font-size: var(--step-4);
+    text-transform: uppercase;
+    line-height: 1.05;
+  }
+  .blend__share {
+    color: var(--vermilion);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .blend__item dd {
+    margin-top: var(--s-1);
+    font-size: var(--step-0);
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 1100px) {
+    .families__head > :first-child,
+    .families__lede {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 760px) {
+    .split {
+      grid-template-columns: 1fr;
+      row-gap: var(--s-4);
+    }
+    .side--coffee {
+      grid-column: 1;
+      grid-row: 3;
+      padding-top: 0;
+    }
+    .split__slash {
+      position: static;
+      grid-column: 1;
+      grid-row: 2;
+      height: 4.5rem;
+      width: 3rem;
+      translate: none;
+      justify-self: center;
+    }
+    .blend__key {
+      flex-direction: column;
+      gap: var(--s-4);
+    }
+  }
+
+  /* The slash draws down between the two families; the blend bar pours in, 70 then 30. */
+  @media (prefers-reduced-motion: no-preference) {
+    .split__slash {
+      transition: clip-path 1100ms var(--ease-in-out) 350ms;
+    }
+    :global(.js) .split[data-reveal]:not(.is-in) .split__slash {
+      clip-path: inset(0 0 100% 0);
+    }
+    .blend__seg {
+      transform-origin: left;
+      transition: transform 1100ms var(--ease-out) 300ms;
+    }
+    .blend__seg--1 {
+      transition-delay: 900ms;
+    }
+    .blend__item {
+      transition: opacity 500ms var(--ease-out) 1200ms;
+    }
+    :global(.js) .blend.reveal:not(.is-in) .blend__seg {
+      transform: scaleX(0);
+    }
+    :global(.js) .blend.reveal:not(.is-in) .blend__item {
+      opacity: 0;
+    }
+  }
+</style>

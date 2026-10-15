@@ -1,0 +1,375 @@
+@import './tokens.css';
+
+/* Subset faces built by scripts/subset-fonts.mjs (D7). */
+@font-face {
+  font-family: 'Anek Rupee';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  font-stretch: 75% 125%;
+  src: url('../assets/fonts/anek-rupee.woff2') format('woff2');
+  unicode-range: U+20B9;
+}
+@font-face {
+  font-family: 'Anek Telugu Sign';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url('../assets/fonts/anek-telugu-sign.woff2') format('woff2');
+  unicode-range: U+0C00-0C7F, U+200C-200D, U+25CC;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + var(--s-4));
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-voice);
+  font-size: var(--step-1);
+  line-height: 1.55;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+  font-weight: inherit;
+}
+p {
+  text-wrap: pretty;
+}
+a {
+  color: inherit;
+}
+::selection {
+  background: var(--enamel);
+  color: var(--cream);
+}
+
+/* ---------- Smooth scrolling (Lenis, src/scripts/smooth.ts) ---------- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* ---------- Focus ---------- */
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* ---------- Layout ---------- */
+/* Side-entering reveals start off-canvas: clip them horizontally without making <main> a scroll
+   container (overflow: clip, not hidden), so sticky positioning and vertical scroll are untouched. */
+main {
+  overflow-x: clip;
+}
+.container {
+  width: min(100% - 2 * var(--gutter), var(--container));
+  margin-inline: auto;
+}
+
+/* ---------- Type roles ---------- */
+.sign-type {
+  font-family: var(--font-sign);
+  font-stretch: 75%;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+  line-height: 0.9;
+}
+.label {
+  font-family: var(--font-sign);
+  font-stretch: 100%;
+  font-weight: 600;
+  font-size: var(--step--1);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+.lede {
+  font-size: var(--step-3);
+  line-height: 1.35;
+}
+
+/* ---------- Buttons & links ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: 48px;
+  padding: 0 var(--s-5);
+  border: 0;
+  background: var(--enamel);
+  color: var(--cream);
+  font-family: var(--font-sign);
+  font-stretch: 100%;
+  font-weight: 650;
+  font-size: 0.9375rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+/* Hover: a deeper brown sweeps in from the left, like a cloth across the counter. */
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--enamel-deep);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.btn:hover::before {
+  transform: scaleX(1);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+/* The ring is drawn outside the button, over paper: it must not inherit cream text colour. */
+.btn:focus-visible {
+  outline-color: var(--enamel);
+}
+.btn--invert {
+  background: var(--cream);
+  color: var(--enamel);
+}
+.btn--invert::before {
+  background: var(--paper-deep);
+}
+.btn--invert:focus-visible {
+  outline-color: var(--cream);
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-sign);
+  font-stretch: 100%;
+  font-weight: 650;
+  font-size: 0.9375rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.35em;
+  transition: text-decoration-thickness var(--dur-quick) var(--ease-out);
+}
+.text-link:hover {
+  text-decoration-thickness: 3px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Reveal system (docs/motion.md) ----------
+   [data-reveal] elements get .is-in once from the observer in Base.astro. Hidden states apply only with
+   JS and motion allowed. Variants: data-reveal="rise" (default) | "left" | "right" | "scale".
+   Stagger siblings with style="--i: n". Headings use .mask-reveal (text slides up from a clip). */
+.mask-reveal .mask__line {
+  display: block;
+  overflow: hidden;
+  /* room for caps and descenders inside the clip */
+  padding-block: 0.08em;
+  margin-block: -0.08em;
+}
+.mask-reveal .mask__inner {
+  display: block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+    transition-delay: calc(var(--reveal-delay, 0ms) + var(--i, 0) * var(--stagger));
+  }
+  .js .reveal[data-reveal='left'] {
+    transform: translateX(-48px);
+  }
+  .js .reveal[data-reveal='right'] {
+    transform: translateX(48px);
+  }
+  .js .reveal[data-reveal='scale'] {
+    transform: scale(0.95);
+  }
+  .js .reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+  /* Dark bands (the cups, the board) open like a shutter: the clip widens to the full bleed. */
+  .js .band-reveal {
+    clip-path: inset(3% 2.5% round var(--radius-enamel));
+    transition: clip-path 1200ms var(--ease-out);
+  }
+  .js .band-reveal.is-in {
+    clip-path: inset(0 0 round 0);
+  }
+  .js .mask-reveal .mask__inner {
+    transform: translateY(105%);
+    transition: transform 1000ms var(--ease-out);
+    transition-delay: calc(var(--reveal-delay, 0ms) + var(--i, 0) * var(--stagger));
+  }
+  .js .mask-reveal.is-in .mask__inner {
+    transform: none;
+  }
+}
+
+/* ---------- Line drawings (figure plates, floor plan) — docs/art-direction.md ---------- */
+.drawing {
+  --line: var(--ink);
+  --anno: var(--enamel);
+  --liquid: var(--enamel);
+  overflow: visible;
+}
+.drawing .ln,
+.drawing .ln * {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.drawing .hid,
+.drawing .hid * {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 2.5;
+  opacity: 0.75;
+}
+.drawing .dots * {
+  fill: var(--line);
+}
+.drawing .liquid,
+.drawing .liquid * {
+  fill: var(--liquid);
+  stroke: none;
+}
+.drawing .stream {
+  fill: none;
+  stroke: var(--liquid);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+}
+.drawing .stream--thin {
+  stroke-width: 2.2;
+}
+.drawing .anno path,
+.drawing .anno line {
+  fill: none;
+  stroke: var(--anno);
+  stroke-width: 0.9;
+}
+.drawing text {
+  font-family: var(--font-sign);
+  font-stretch: 100%;
+  font-weight: 600;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.drawing .anno text {
+  fill: var(--anno);
+}
+.drawing .num text {
+  fill: var(--vermilion);
+  font-stretch: 75%;
+  font-weight: 750;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+/* Draw-in: strokes trace once when the drawing enters view.
+   Every element matched by .ln *, .anno path, .stream MUST carry pathLength="1".
+   Selected by class, not [pathLength]: Chrome does not restyle descendants for a mixed-case
+   SVG attribute selector when an ancestor class changes. */
+@media (prefers-reduced-motion: no-preference) {
+  .js .drawing[data-reveal] :is(.ln *, .anno path, .stream) {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .js .drawing[data-reveal] :is(.liquid, .dots, .hid),
+  .js .drawing[data-reveal] text {
+    opacity: 0;
+  }
+  .js .drawing[data-reveal].is-in :is(.ln *, .anno path, .stream) {
+    animation: draw-line var(--dur-slow) var(--ease-in-out) var(--draw-delay, 0ms) both;
+  }
+  .js .drawing[data-reveal].is-in :is(.liquid, .dots, .hid),
+  .js .drawing[data-reveal].is-in text {
+    opacity: 1;
+    animation: fade-in var(--dur-base) var(--ease-out) calc(var(--draw-delay, 0ms) + 700ms) both;
+  }
+  .js .drawing[data-reveal].is-in .hid {
+    opacity: 0.75;
+  }
+}
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}

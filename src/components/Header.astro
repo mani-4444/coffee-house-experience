@@ -1,0 +1,340 @@
+---
+import HalfMark from './HalfMark.astro';
+import { site } from '../data/site';
+import { photographedItems } from '../data/media';
+
+const links = [
+  { href: '#by-two', label: 'Kaapi by two' },
+  // The drinks section only exists once photos have been supplied (D9).
+  ...(photographedItems.length ? [{ href: '#cups', label: 'The cups' }] : []),
+  { href: '#board', label: 'The board' },
+  { href: '#rules', label: 'House rules' },
+  { href: '#visit', label: 'Visit' },
+];
+---
+
+<header class="site-header" data-header data-hidden="false">
+  <div class="container site-header__inner">
+    <a class="wordmark" href="#top">
+      <HalfMark size="1.9rem" />
+      <span class="wordmark__text">One by Two</span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <button
+        class="nav__toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="nav-list"
+        data-nav-toggle
+      >
+        <span data-nav-toggle-label>Menu</span>
+      </button>
+      <ul class="nav__list" id="nav-list" data-nav-list>
+        {
+          links.map((l) => (
+            <li>
+              <a class="nav__link" href={l.href} data-spy={l.href.slice(1)}>
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+        <li class="nav__indicator" aria-hidden="true" data-nav-indicator></li>
+      </ul>
+    </nav>
+
+    <a class="btn header-cta" href={site.mapsUrl} target="_blank" rel="noopener">
+      Directions<span class="visually-hidden"> (opens Google Maps)</span>
+    </a>
+  </div>
+  <span class="site-header__progress" aria-hidden="true"></span>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+  const list = document.querySelector<HTMLElement>('[data-nav-list]');
+  const label = document.querySelector<HTMLElement>('[data-nav-toggle-label]');
+  if (toggle && list && label) {
+    const setOpen = (open: boolean, returnFocus = false) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      label.textContent = open ? 'Close' : 'Menu';
+      if (!open && returnFocus) toggle.focus();
+    };
+    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+    list.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) setOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') setOpen(false, true);
+    });
+  }
+
+  // ---- The header steps aside while reading down, and returns the moment you scroll up (D14). ----
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (header && !reduced) {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const y = window.scrollY;
+      const keep =
+        y < 140 ||
+        Boolean(document.documentElement.dataset.intro) ||
+        header.contains(document.activeElement) ||
+        toggle?.getAttribute('aria-expanded') === 'true';
+      if (keep || y < lastY - 4) header.dataset.hidden = 'false';
+      else if (y > lastY + 4) header.dataset.hidden = 'true';
+      lastY = y;
+    };
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }, { passive: true });
+    header.addEventListener('focusin', () => (header.dataset.hidden = 'false'));
+  }
+
+  // ---- Scroll-spy: the section in view marks its link; one underline slides between links. ----
+  const spyLinks = [...document.querySelectorAll<HTMLAnchorElement>('[data-spy]')];
+  const indicator = document.querySelector<HTMLElement>('[data-nav-indicator]');
+  const sections = spyLinks
+    .map((a) => document.getElementById(a.dataset.spy!))
+    .filter((s): s is HTMLElement => Boolean(s));
+  const setCurrent = (id: string | null) => {
+    let current: HTMLAnchorElement | undefined;
+    for (const a of spyLinks) {
+      const on = a.dataset.spy === id;
+      if (on) {
+        a.setAttribute('aria-current', 'true');
+        current = a;
+      } else a.removeAttribute('aria-current');
+    }
+    if (!indicator) return;
+    if (current) {
+      indicator.style.setProperty('--x', `${current.offsetLeft}px`);
+      indicator.style.setProperty('--w', `${current.offsetWidth}px`);
+      indicator.dataset.on = 'true';
+    } else indicator.dataset.on = 'false';
+  };
+  if (sections.length && 'IntersectionObserver' in window) {
+    const visible = new Set<string>();
+    const spy = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target.id);
+          else visible.delete(e.target.id);
+        }
+        // The last section (in page order) that crosses the reading line wins.
+        const id = [...sections].reverse().find((s) => visible.has(s.id))?.id ?? null;
+        setCurrent(id);
+      },
+      { rootMargin: '-35% 0px -60% 0px' },
+    );
+    sections.forEach((s) => spy.observe(s));
+  }
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--paper);
+    border-bottom: var(--hairline) solid var(--rule-line);
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .site-header[data-hidden='true'] {
+    transform: translateY(-100%);
+  }
+  /* Reading progress: a crema line along the header's foot (scroll-driven where supported). */
+  .site-header__progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--crema);
+    transform-origin: left;
+    transform: scaleX(0);
+    pointer-events: none;
+  }
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .site-header__progress {
+        animation: progress linear both;
+        animation-timeline: scroll(root);
+      }
+    }
+  }
+  @keyframes progress {
+    to {
+      transform: scaleX(1);
+    }
+  }
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--s-5);
+    min-height: var(--header-h);
+  }
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-height: 44px;
+    color: var(--enamel);
+    text-decoration: none;
+    font-family: var(--font-sign);
+    font-stretch: 75%;
+    font-weight: 750;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    margin-right: auto;
+  }
+  .nav__list {
+    position: relative;
+    display: flex;
+    gap: var(--s-1);
+    list-style: none;
+    padding: 0;
+  }
+  /* One underline that slides to the current section's link. */
+  .nav__indicator {
+    position: absolute;
+    left: 0;
+    bottom: 6px;
+    height: 2px;
+    width: var(--w, 0);
+    background: var(--enamel);
+    transform: translateX(var(--x, 0));
+    opacity: 0;
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      width var(--dur-base) var(--ease-out),
+      opacity var(--dur-quick) var(--ease-out);
+    pointer-events: none;
+  }
+  .nav__indicator[data-on='true'] {
+    opacity: 1;
+  }
+  .nav__link[aria-current='true'] {
+    color: var(--enamel);
+  }
+  .nav__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--s-3);
+    font-family: var(--font-sign);
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.4em;
+    white-space: nowrap;
+  }
+  .nav__link:hover {
+    text-decoration-line: underline;
+  }
+  .nav__toggle {
+    display: none;
+  }
+  .header-cta {
+    min-height: 44px;
+    padding-inline: var(--s-4);
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 900px) {
+    .nav__indicator {
+      display: none;
+    }
+    .site-header__inner {
+      gap: var(--s-2);
+    }
+    .wordmark {
+      font-size: 1.3rem;
+    }
+    .nav__toggle {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0 var(--s-3);
+      background: none;
+      border: 1.5px solid var(--ink);
+      font-family: var(--font-sign);
+      font-weight: 650;
+      font-size: 0.875rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .nav__list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      gap: 0;
+      padding: var(--s-2) var(--gutter) var(--s-6);
+      background: var(--paper);
+      border-bottom: var(--hairline) solid var(--rule-line);
+    }
+    :global(.js) .nav__toggle[aria-expanded='false'] + .nav__list {
+      display: none;
+    }
+    .nav__link {
+      width: 100%;
+      min-height: 56px;
+      padding: 0;
+      border-bottom: var(--hairline) solid var(--rule-line);
+      font-stretch: 75%;
+      font-weight: 750;
+      font-size: 1.75rem;
+      letter-spacing: 0.01em;
+    }
+    .header-cta {
+      padding-inline: var(--s-3);
+    }
+  }
+  /* Narrowest phones: the sign below carries the name; keep it for screen readers only. */
+  @media (max-width: 380px) {
+    .wordmark__text {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  }
+  @media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+    .nav__toggle[aria-expanded='true'] + .nav__list {
+      animation: drop var(--dur-base) var(--ease-out);
+    }
+  }
+  @keyframes drop {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  /* No-JS: the toggle is useless, show links inline below the bar */
+  @media (max-width: 900px) {
+    :global(html:not(.js)) .nav__toggle {
+      display: none;
+    }
+    :global(html:not(.js)) .nav__list {
+      position: static;
+    }
+  }
+</style>

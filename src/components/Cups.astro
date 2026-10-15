@@ -1,0 +1,510 @@
+---
+// The drinks, highlighted (D9, D14). Each photographed drink is an enamel menu plate, the café's own
+// object, so the "card" stays in the brand's language. The house order leads as a wide plate.
+// Every plate links to its row on the board, which flashes on arrival. Hidden when no photos exist.
+import { Picture } from 'astro:assets';
+import HalfMark from './HalfMark.astro';
+import { orphanPhotos, photographedItems } from '../data/media';
+
+if (orphanPhotos.length) {
+  console.warn(`[Cups] photos with no matching menu item id: ${orphanPhotos.join(', ')}`);
+}
+
+const feature = photographedItems.find((i) => i.signature) ?? null;
+const others = photographedItems.filter((i) => i !== feature);
+// No orphans on the 6-column grid: rows of three; a final pair becomes two wide plates; a final single centres.
+const n = others.length;
+const layout = (k: number) => (n % 3 === 2 && k >= n - 2 ? 'wide' : n % 3 === 1 && k === n - 1 ? 'centre' : 'std');
+const label = (name: string, price: number, extra = '') => `${name}, ₹${price}${extra}. See it on the board.`;
+---
+
+{
+  photographedItems.length > 0 && (
+    <section class="cups band-reveal" id="cups" aria-labelledby="cups-title" data-reveal>
+      <div class="container">
+        <header class="cups__head">
+          <p class="label cups__eyebrow reveal" data-reveal>In the cups</p>
+          <h2 class="sign-type cups__title mask-reveal" id="cups-title" data-reveal>
+            <span class="mask__line"><span class="mask__inner">What we pour.</span></span>
+          </h2>
+          <p class="cups__lede reveal" data-reveal style="--i: 2">
+            Photographed at our own marble tables, in the morning light. Tap a cup to find it on the board.
+          </p>
+        </header>
+
+        {feature && (
+          <div class="reveal" data-reveal="scale" style="--i: 1">
+            <a
+              class="cup cup--feature"
+              href={`#item-${feature.id}`}
+              data-cup
+              data-tilt
+              aria-label={label(feature.name, feature.price, ' for two cups')}
+            >
+              <span class="plate">
+                <span class="plate__face">
+                  <span class="cup__frame">
+                    <span class="cup__parallax">
+                      <Picture
+                        class="cup__photo"
+                        src={feature.photo}
+                        alt={`${feature.name}: ${feature.note}`}
+                        formats={['avif', 'webp']}
+                        widths={[480, 720, 960, 1280]}
+                        sizes="(max-width: 760px) 100vw, 50vw"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </span>
+                  </span>
+                  <span class="cup__body">
+                    <span class="cup__mark" aria-hidden="true">
+                      <HalfMark size="100%" />
+                    </span>
+                    <span class="label cup__flag">The house order</span>
+                    <span class="cup__name">{feature.name}</span>
+                    <span class="cup__price price">
+                      ₹{feature.price} <span class="cup__per">for two cups</span>
+                    </span>
+                    <span class="cup__note">{feature.note}</span>
+                    <span class="cup__go">See it on the board <span aria-hidden="true">→</span></span>
+                  </span>
+                </span>
+              </span>
+            </a>
+          </div>
+        )}
+
+        <p class="cups__swipe label" aria-hidden="true">Swipe for more <span>→</span></p>
+        <ul class="cups__grid" role="list">
+          {others.map((item, k) => (
+            <li class:list={['reveal', `cups__cell--${layout(k)}`]} data-reveal style={`--i: ${k % 3}`}>
+              <a
+                class:list={['cup', layout(k) === 'wide' && 'cup--wide']}
+                href={`#item-${item.id}`}
+                data-cup
+                data-tilt
+                aria-label={label(item.name, item.price)}
+              >
+                <span class="plate">
+                  <span class="plate__face">
+                    <span class="cup__frame">
+                      <span class="cup__parallax">
+                        <Picture
+                          class="cup__photo"
+                          src={item.photo}
+                          alt={`${item.name}: ${item.note}`}
+                          formats={['avif', 'webp']}
+                          widths={[400, 640, 960]}
+                          sizes="(max-width: 760px) 80vw, (max-width: 1100px) 50vw, 33vw"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </span>
+                    </span>
+                    <span class="cup__body">
+                      <span class="cup__line">
+                        <span class="cup__name">{item.name}</span>
+                        <span class="cup__price price">₹{item.price}</span>
+                      </span>
+                      <span class="cup__note">{item.note}</span>
+                      <span class="cup__go">On the board <span aria-hidden="true">→</span></span>
+                    </span>
+                  </span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  // Cursor tilt + light, on fine pointers with motion allowed only. rAF-throttled CSS variables.
+  const fine = matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)');
+  if (fine.matches) {
+    document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((card) => {
+      let frame = 0;
+      let px = 0.5;
+      let py = 0.5;
+      const paint = () => {
+        frame = 0;
+        card.style.setProperty('--rx', `${((px - 0.5) * 10).toFixed(2)}deg`);
+        card.style.setProperty('--ry', `${((0.5 - py) * 8).toFixed(2)}deg`);
+        card.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`);
+        card.style.setProperty('--my', `${(py * 100).toFixed(1)}%`);
+      };
+      card.addEventListener('pointermove', (e) => {
+        const r = card.getBoundingClientRect();
+        px = (e.clientX - r.left) / r.width;
+        py = (e.clientY - r.top) / r.height;
+        card.dataset.tilting = 'true';
+        if (!frame) frame = requestAnimationFrame(paint);
+      });
+      card.addEventListener('pointerleave', () => {
+        delete card.dataset.tilting;
+        px = 0.5;
+        py = 0.5;
+        if (!frame) frame = requestAnimationFrame(paint);
+      });
+    });
+  }
+</script>
+
+<style>
+  /* ---------- the band ---------- */
+  .cups {
+    background: var(--ink);
+    color: var(--cream);
+    padding-block: var(--section-y);
+    overflow: hidden;
+  }
+  .cups__head {
+    display: grid;
+    gap: var(--s-3);
+    margin-bottom: clamp(var(--s-7), 5vw, var(--s-8));
+    max-width: 44rem;
+  }
+  .cups__eyebrow {
+    color: var(--crema);
+  }
+  .cups__title {
+    font-size: var(--step-6);
+  }
+  .cups__lede {
+    color: var(--cream-muted);
+    font-style: italic;
+  }
+
+  /* ---------- the plate: an enamel menu plate (sign construction: ground, inset cream rim) ---------- */
+  .cup {
+    --rx: 0deg;
+    --ry: 0deg;
+    --lift: 0px;
+    display: block;
+    height: 100%;
+    color: var(--cream);
+    text-decoration: none;
+    transform: perspective(1000px) rotateX(var(--ry)) rotateY(var(--rx)) translateY(var(--lift));
+    transition: transform 500ms var(--ease-out);
+  }
+  .cup[data-tilting] {
+    transition: transform 120ms linear;
+  }
+  .plate {
+    position: relative;
+    display: block;
+    height: 100%;
+    padding: var(--rim-inset);
+    background: var(--enamel);
+    border-radius: var(--radius-enamel);
+    isolation: isolate;
+  }
+  /* cursor light */
+  .plate::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), var(--sheen), transparent 55%);
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out);
+    pointer-events: none;
+  }
+  .plate__face {
+    display: grid;
+    gap: var(--s-4);
+    height: 100%;
+    padding: var(--s-3) var(--s-3) var(--s-5);
+    border: var(--rim-width) solid var(--cream-hair);
+    border-radius: calc(var(--radius-enamel) - var(--rim-inset) / 2);
+    transition: border-color var(--dur-base) var(--ease-out);
+  }
+  .cup__frame {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    border-radius: calc(var(--radius-enamel) - var(--rim-inset));
+    background: var(--ink);
+  }
+  .cup__parallax {
+    position: absolute;
+    inset: -6% 0;
+    display: block;
+  }
+  .cup :global(picture),
+  .cup :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .cup :global(img) {
+    object-fit: cover;
+    transition: transform 900ms var(--ease-out);
+  }
+  .cup__body {
+    display: grid;
+    gap: var(--s-2);
+    align-content: start;
+    padding-inline: var(--s-2);
+  }
+  .cup__line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+  }
+  .cup__name {
+    font-family: var(--font-sign);
+    font-stretch: 75%;
+    font-weight: 750;
+    font-size: var(--step-4);
+    line-height: 1.02;
+    text-transform: uppercase;
+  }
+  .cup__price {
+    font-family: var(--font-sign);
+    font-stretch: 75%;
+    font-weight: 750;
+    font-size: var(--step-3);
+    color: var(--crema);
+    font-variant-numeric: tabular-nums lining-nums;
+    white-space: nowrap;
+  }
+  .cup__note {
+    font-size: var(--step-0);
+    color: var(--enamel-soft);
+    max-width: 38ch;
+  }
+  .cup__go {
+    margin-top: var(--s-2);
+    font-family: var(--font-sign);
+    font-weight: 650;
+    font-size: var(--step--1);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    /* small label on enamel: cream (11:1), not crema (4.2:1) */
+    color: var(--cream);
+  }
+  .cup__go span {
+    display: inline-block;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  /* ---------- the highlight: lift, light, zoom, crema rim ---------- */
+  .cup:hover,
+  .cup:focus-visible {
+    --lift: -6px;
+  }
+  .cup:hover .plate::after {
+    opacity: 1;
+  }
+  .cup:hover .plate__face,
+  .cup:focus-visible .plate__face {
+    border-color: var(--crema);
+  }
+  .cup:hover :global(img),
+  .cup:focus-visible :global(img) {
+    transform: scale(1.06);
+  }
+  .cup:hover .cup__go span,
+  .cup:focus-visible .cup__go span {
+    transform: translateX(6px);
+  }
+  .cup:focus-visible {
+    outline: 2px solid var(--crema);
+    outline-offset: 6px;
+    border-radius: var(--radius-enamel);
+  }
+
+  /* ---------- the house order: a wide plate ---------- */
+  .cup--feature .plate__face {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(var(--s-5), 4vw, var(--s-8));
+    padding: var(--s-3);
+  }
+  .cup--feature .cup__frame {
+    aspect-ratio: 5 / 4;
+  }
+  .cup--feature .cup__body {
+    position: relative;
+    gap: var(--s-3);
+    padding: var(--s-5) var(--s-5) var(--s-5) 0;
+  }
+  .cup__mark {
+    position: absolute;
+    top: var(--s-4);
+    right: var(--s-5);
+    width: clamp(3.5rem, 6vw, 5.5rem);
+    height: clamp(3.5rem, 6vw, 5.5rem);
+    color: var(--crema);
+  }
+  .cup--feature .cup__flag {
+    color: var(--enamel-soft);
+  }
+  .cup--feature .cup__name {
+    font-size: var(--step-6);
+    line-height: 0.9;
+    max-width: 8ch;
+  }
+  .cup--feature .cup__price {
+    font-size: var(--step-4);
+  }
+  .cup__per {
+    font-size: 0.6em;
+    letter-spacing: 0.06em;
+    color: var(--enamel-soft);
+  }
+  .cup--feature .cup__note {
+    font-size: var(--step-1);
+  }
+
+  /* ---------- the grid ---------- */
+  .cups__grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--gap);
+    margin-top: var(--gap);
+    padding: 0;
+    list-style: none;
+  }
+  .cups__grid > li {
+    grid-column: span 2;
+  }
+  .cups__grid > .cups__cell--wide {
+    grid-column: span 3;
+  }
+  .cups__grid > .cups__cell--centre {
+    grid-column: 3 / span 2;
+  }
+  .cup--wide .plate__face {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+    align-items: center;
+    padding: var(--s-3);
+  }
+  .cup--wide .cup__body {
+    padding: var(--s-4) var(--s-4) var(--s-4) 0;
+  }
+  .cup--wide .cup__line {
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+  .cups__swipe {
+    display: none;
+  }
+
+  /* ---------- motion: entry and scroll ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) .cup__mark {
+      transform: rotate(-120deg) scale(0.6);
+      opacity: 0;
+      transition:
+        transform 1100ms var(--ease-out) 450ms,
+        opacity 600ms var(--ease-out) 450ms;
+    }
+    :global(.js) :global(.is-in) .cup__mark {
+      transform: none;
+      opacity: 1;
+    }
+    @supports (animation-timeline: view()) {
+      .cup__parallax {
+        animation: cup-parallax linear both;
+        animation-timeline: view();
+      }
+    }
+  }
+  @keyframes cup-parallax {
+    from {
+      transform: translateY(-5%);
+    }
+    to {
+      transform: translateY(5%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cup,
+    .cup :global(img) {
+      transition: none;
+    }
+  }
+
+  /* ---------- tablet ---------- */
+  @media (max-width: 1100px) {
+    .cups__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .cups__grid > li,
+    .cups__grid > .cups__cell--wide,
+    .cups__grid > .cups__cell--centre {
+      grid-column: span 1;
+    }
+    .cup--wide .plate__face {
+      grid-template-columns: 1fr;
+    }
+    .cup--wide .cup__body {
+      padding: 0 var(--s-2);
+    }
+    .cup--wide .cup__line {
+      flex-direction: row;
+    }
+  }
+
+  /* ---------- phone: the house order stacks; the rest swipe ---------- */
+  @media (max-width: 760px) {
+    .cup--feature .plate__face {
+      grid-template-columns: 1fr;
+    }
+    .cup--feature .cup__frame {
+      aspect-ratio: 4 / 5;
+    }
+    .cup--feature .cup__body {
+      padding: 0 var(--s-2) var(--s-3);
+    }
+    .cups__swipe {
+      display: block;
+      margin-top: var(--s-6);
+      color: var(--crema);
+    }
+    .cups__grid {
+      display: flex;
+      gap: var(--s-4);
+      margin-top: var(--s-3);
+      margin-inline: calc(var(--gutter) * -1);
+      padding: var(--s-2) var(--gutter) var(--s-4);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      scrollbar-width: none;
+    }
+    .cups__grid::-webkit-scrollbar {
+      display: none;
+    }
+    .cups__grid > li {
+      flex: 0 0 80%;
+      scroll-snap-align: center;
+    }
+    @supports (animation-timeline: view(inline)) {
+      @media (prefers-reduced-motion: no-preference) {
+        .cups__grid > li {
+          animation: carousel-focus linear both;
+          animation-timeline: view(inline);
+        }
+      }
+    }
+  }
+  @keyframes carousel-focus {
+    0% {
+      scale: 0.9;
+    }
+    50% {
+      scale: 1;
+    }
+    100% {
+      scale: 0.9;
+    }
+  }
+</style>
